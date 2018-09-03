@@ -1,0 +1,247 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+
+            </div>
+            <div class="content">
+                <div id="chartdivLine" [style.width.%]="100" [style.height.px]="500"></div>
+                <div class="footer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="row">
+                <div class="col-sm-6">
+                    <select class="form-control" (change)="selectCodeCountry($event)">
+                        <option value="null">Select country Code</option>
+                        <option value="{{ item }}" *ngFor="let item of listeFieldText">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <select class="form-control" (change)="selectFieldNameMap($event)">
+                        <option value="null">Select column</option>
+                        <option value="{{ item }}" *ngFor="let item of listeFieldNumber">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+            <div class="col-sm-12"> 
+                <div id="chartdiv1" [style.width.%]="100" [style.height.px]="500"></div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-6">
+    <!--  Afficher la liste des types de clients se trouvant dans notre base  -->
+        <select name="columnTypeDeClient" id="columnTypeDeClient" class="form-control" (change)="selectColumnTypeDeClient($event)">
+            <option value="null">Champ type de client</option>
+            <option value="{{ item }}" *ngFor="let item of listeFieldText">
+                {{ item | titlecase }}
+            </option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <!--  Afficher la liste des types de clients se trouvant dans notre base  -->
+        <select name="typeDeClient" id="typeDeClient" class="form-control" (change)="selectTypeDeClient($event)">
+            <option value="null">Type Client</option>
+            <option value="{{ item.key }}" *ngFor="let item of listeTypeClient">
+                {{ item.key | titlecase }}
+            </option>
+        </select>
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Diagramme en <b>Pie</b> : {{ typeDeClient }}</h4>
+            </div>
+            <div class="content">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div id="chartdivPie1" [style.width.%]="100" [style.height.px]="300"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div id="chartdivPie2" [style.width.%]="100" [style.height.px]="300"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div id="chartdivPie3" [style.width.%]="100" [style.height.px]="300"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div id="chartdivPie4" [style.width.%]="100" [style.height.px]="300"></div>
+                    </div>
+                </div>
+                <div class="footer"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="header">
+                <h4 class="title">Diagramme en <b>Bar</b> pour les {{ typeDeClient }}s</h4>
+                <!--<p class="category">24 Hours performance</p> -->
+                <div class="row">
+                    <div class="col-sm-3">
+                        <select name="typeChart" id="typeChart" class="form-control" (change)="selectTypeChart($event)">
+                            <option value="null">Type Chart Bar</option>
+                            <option value="{{ item }}" *ngFor="let item of listeChart">
+                                {{ item }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <select name="fieldName" id="fieldName" class="form-control" (change)="selectFieldNameXValue($event)">
+                            <option value="null">Nom champ X</option>
+                            <option value="{{ item }}" *ngFor="let item of listeFieldText">
+                                {{ item }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <select name="fieldNameXValue" id="fieldNameXValue" class="form-control" (change)="selectFieldNameYValue($event)">
+                            <option value="null">Nom champ Y</option>
+                            <option value="{{ item }}" *ngFor="let item of listeFieldNumber">
+                                {{ item }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <select name="fieldName" id="fieldName" class="form-control" (change)="selectTypeAggregation($event)">
+                            <option value="null">Aggrégation</option>
+                            <option value="{{ item.value}}" *ngFor="let item of listeAggregation">
+                                {{ item.key }}
+                            </option>
+                        </select>
+                    </div>
+                    <!-- {{ listeFieldText | json }}
+                    <hr>
+                    {{ listeFieldDate | json }}
+                    <hr>
+                    {{ listeFieldNumber | json }} -->
+                </div>
+            </div>
+            <div class="content">
+                <!--<div id="chartHours" class="ct-chart"></div>-->
+                <div id="chartdiv" [style.width.%]="100" [style.height.px]="300"></div>
+                <!-- HTML -->
+            
+                <div class="footer">
+                    <!-- <div class="chart-legend">
+                        <i class="fa fa-circle text-info"></i> Open
+                        <i class="fa fa-circle text-danger"></i> Click
+                        <i class="fa fa-circle text-warning"></i> Click Second Time
+                    </div>
+                    <hr> -->
+                    <!-- <div class="align-items-start">
+                        Depth 3D {{ depth3D }}
+                        <input type="range" value="50" max="100" min="0">
+                    </div>
+                    <div class="align-items-end">
+                        Angle {{ angle }}
+                        <input type="range" value="50" max="100" min="0">
+                    </div>
+                    <div class="align-items-end">
+                        Rotation légende {{ rotateLegende }}
+                        <input type="range" value="50" max="100" min="0">
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="header">
+                <div class="col-sm-12">
+                    <label for="top">Liste des {{ topHitValueDepartment }} Départements à haut potentiel de fraude</label>
+                    <select name="top" id="top" class="form-control" (change)="selectForTopHitDepartment($event)">
+                        <option value="10">Top ...</option>
+                        <option value="{{ item }}" *ngFor="let item of [5,10,15,20,25,30,35,40]">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="content">
+                <div class="table-responsive">
+                    <table class="table">
+                        <tr>
+                            <th>ID</th>
+                            <th>Departement</th>
+                            <th>Score</th>
+                        </tr>
+                        <tr *ngFor="let item of listeTopHitValueDepartment; let i = index;">
+                            <td>{{ i+1 }}</td>
+                            <td>{{ item.key }}</td>
+                            <td>{{ item.value }} %</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="footer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="row">
+                <div class="col-sm-6">
+                    <label for="top">Top {{ topHitValueClient }} Clients les plus douteux</label>
+                    <select name="topHitsClient" id="topHitsClient" class="form-control" (change)="selectForTopHitClient($event)">
+                        <option value="10">Top ...</option>
+                        <option value="{{ item }}" *ngFor="let item of [5,10,15,25,30,35,40]">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label for="top">Filtre par Département</label>
+                    <select name="topFiltreDepartement" id="topFiltreDepartement" class="form-control" (change)="selectForTopHitDepartmentForClient($event)">
+                        <option value="null">Tous les Département</option>
+                        <option value="{{ item }}" *ngFor="let item of listeDepartment">
+                            {{ item }}
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                <div class="table-responsive">
+                    <table class="table">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Adresse</th>
+                            <th>Departement</th>
+                        </tr>
+                        <tr *ngFor="let item of listeTopHitValueClient">
+                            <td>{{ item.ID }}</td>
+                            <td>{{ item.Email }}</td>
+                            <td>{{ item.Tel }}</td>
+                            <td>{{ item.Adresse }}</td>
+                            <td>{{ item.Department }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="footer"></div>
+            </div>
+        </div>
+    </div>
+</div>
