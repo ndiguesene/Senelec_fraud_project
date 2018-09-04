@@ -17,7 +17,7 @@ import { DashboardGlobalComponent } from './dashboard-global/dashboard-global.co
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const appRoutes: Routes = [
-  { path: '', component: DashboardComponent, pathMatch: 'full'},
+  { path: '', component: DashboardGlobalComponent, pathMatch: 'full'},
   { path: 'indexation', component: IndexationComponent },
   { path: 'dashboard', component: DashboardComponent },
   { path: 'dashboardGlobal', component: DashboardGlobalComponent },

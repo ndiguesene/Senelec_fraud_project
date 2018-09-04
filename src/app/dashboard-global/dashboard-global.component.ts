@@ -21,6 +21,8 @@ export class DashboardGlobalComponent implements OnInit {
   chartDataMap = [];
   listeTopHitValueDepartment = [];
   listeTopHitValueClient  = [];
+  stat = 'ndigue sene';
+  infos = [];
 
   ngOnInit() {
     this.es.getAllData('donneesgeo').subscribe(ele => {
@@ -32,14 +34,58 @@ export class DashboardGlobalComponent implements OnInit {
 
     this.generateGraph('avg', 'Department', 'Risk', 'Répartition des départements suivant leur propension à la fraude');
     this.generateGraphLine('donneesgeo', 'KWH', 'Consommation Energie', 'Date', 'Consommation dénergie');
-    this.generateGraphMap('CodeCountry', 'Risk', 'Répartition spatiale du chiffre daffaire');
+    this.generateGraphMap('CodeCountry', 'Risk', 'Répartition spatiale du chiffre daffaire', 'DOMAIN');
     this.genereGraphPie('chartdivPie1', 'Suspectés de fraude');
-    this.genereGraphPie('chartdivPie2', 'Suspectés de fraude');
-    this.genereGraphPie('chartdivPie3', 'Suspectés de fraude');
-    this.genereGraphPie('chartdivPie4', 'Suspectés de fraude');
-    this.generateTableDepartment(10, 'Department', 'Risk', 'avg');
-    this.generateTableClient(10, 'Department', 'Risk', 'desc');
+    this.genereGraphPieRegionAndDepartment('chartdivPie2', '% des Top 3 régions susppectés de fraude', 'DOMAIN', 'Class');
+    this.genereGraphPieRegionAndDepartment('chartdivPie3', 'Suspectés de fraude', 'Department', 'Class');
+    this.generateTableDepartment(3, 'Department', 'Risk', 'avg');
+    this.generateTableClient(3, 'Department', 'Risk', 'desc');
   }
+  genereGraphPieRegionAndDepartment(id, title, columnX, columnY) {
+    const querr = bodybuilder()
+        .aggregation('terms', columnX + '.keyword', {
+        size: 1000
+        }, agg => agg.aggregation('terms', columnY)).build();
+        this.es.getDataWithRequeteAggregation('donneesgeo', querr).subscribe(
+            er => {
+                let chartData = [];
+                this.es.getResultFilterAggregationBucket(er).forEach((element) => {
+                    const nameAggregation = Object.keys(element)[0];
+
+                    chartData.push({
+                        'key': element['key'],
+                        'value': element[nameAggregation].buckets['1'].doc_count,
+                        'color': this.randomColor(1)
+                    });
+                });
+                chartData.sort(function(a, b) {
+                    return b.value - a.value;
+                });
+                chartData = chartData.splice(
+                    0, 3
+                );
+                let chart = this.AmCharts.makeChart(id, {
+                    'type': 'pie',
+                    'theme': 'light',
+                    'legend': {
+                        'position': 'top',
+                        'marginRight': 100,
+                        'autoMargins': false
+                    },
+                    'titles': [ {
+                        'text': title,
+                    }],
+                    'dataProvider': chartData,
+                    'titleField': 'key',
+                    'valueField': 'value',
+                    'labelRadius': 5,
+                    'radius': '42%',
+                    'innerRadius': '60%',
+                    'labelText': '[[]]'
+                });
+            }
+        );
+    }
   generateTableClient(numberOfHits, columnText, columnValue, sort) {
     // if (this.nomDepartmentSelected === 'null') {
         const qu = bodybuilder()
@@ -153,15 +199,46 @@ export class DashboardGlobalComponent implements OnInit {
         }
     );
   }
-  generateGraphMap(codeCountry, fieldNameMap, title) {
+  /* getInfos(codeCountry, champInfos, fieldNameMap): any {
+    const q = bodybuilder()
+        .aggregation('terms', 'DOMAIN.keyword',
+        agg => agg.aggregation('stats', 'Sales')).build();
+        this.es.getDataWithRequeteAggregation('donneesgeo', q).subscribe(
+            stat => {
+                this.es.getResultFilterAggregationBucket(stat).every(async vall => {
+                    const nameAggregation = await Object.keys(vall)[0];
+                    if (codeCountry === vall['key']) {
+                        alert(vall['key']);
+                        // console.log(vall[nameAggregation]);
+                        this.infos.push({
+                            'infos': vall[nameAggregation]
+                        });
+                        return false;
+                    }
+                });
+            }
+        );
+  } */
+    getInfos(value) {
+        // let inf = [];
+        const r = bodybuilder()
+            .query('match_phrase', 'DOMAIN', value)
+            .aggregation('stats', 'Sales').build();
+        return this.es.getDataWithRequeteAggregation('donneesgeo', r);
+    }
+  async generateGraphMap(codeCountry, fieldNameMap, title, champInfos) {
     if (codeCountry) {
-        this.es.getAllData('donneesgeo', 50).subscribe(
+        await this.es.getAllData('donneesgeo', 50).subscribe(
             el => {
                 let data = el;
-                data['hits']['hits'].forEach(element => {
-                    this.chartDataMap.push({
-                        'id': element['_source'][codeCountry],
-                        'value': element['_source'][fieldNameMap]
+                let liste = ['Dakar', 'Louga', 'Kolda', 'Matam'];
+                data['hits']['hits'].forEach((element, i) => {
+                    this.getInfos('Dakar').subscribe(vall => {
+                        this.chartDataMap.push({
+                            'id': element['_source'][codeCountry],
+                            'value': element['_source'][fieldNameMap],
+                            'infos': JSON.stringify(this.es.getResultFilterAggregationBucket(vall))
+                        });
                     });
                 });
                 this.AmCharts.makeChart('chartdivMap', {
@@ -177,7 +254,8 @@ export class DashboardGlobalComponent implements OnInit {
                         'areas': this.chartDataMap
                     },
                     'areasSettings': {
-                    'autoZoom': true
+                        'autoZoom': false,
+                        'selectable': true
                     },
                     'valueLegend': {
                         'right': 10,
@@ -186,12 +264,18 @@ export class DashboardGlobalComponent implements OnInit {
                     },
                     'export': {
                         'enabled': false
-                    }
+                    },
+                    'listeners': [{
+                        'event': 'clickMapObject',
+                        'method': function(event) {
+                            document.getElementById('infos').innerHTML = event.mapObject.title + ' - ' + event.mapObject.infos;
+                        }
+                    }]
                 });
-            }
-        );
+            });
+        }
     }
-}
+
     genereGraphPie(id, title) {
         const querr = bodybuilder()
                         .aggregation('terms', 'TypeDeClient.keyword').build();
@@ -204,16 +288,18 @@ export class DashboardGlobalComponent implements OnInit {
                     'titles': [ {
                         'text': title,
                     }],
-                    'dataProvider': tab,
-                    'valueField': 'doc_count',
-                    'titleField': 'key',
-                    'pullOutRadius': 0,
-                    'labelRadius': -22,
-                    'labelText': '[[key]]: [[doc_count]] %',
-                    'percentPrecision': 1,
-                     'balloon': {
-                     'fixedPosition': true
+                    'legend': {
+                        'position': 'top',
+                        'marginRight': 100,
+                        'autoMargins': false
                     },
+                    'dataProvider': tab,
+                    'titleField': 'key',
+                    'valueField': 'doc_count',
+                    'labelRadius': 5,
+                    'radius': '42%',
+                    'innerRadius': '60%',
+                    'labelText': '[[]]',
                     'export': {
                       'enabled': false
                     }
