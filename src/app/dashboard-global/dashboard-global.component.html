@@ -1,20 +1,47 @@
-<div class="row">
+<div class="form-group row card" style="padding: 10px;">
+  <form class="form-inline offset-2" >
+    <select class="form-control form-control-sm col-5" (change)="selectRegion($event)">
+      <option value="null">Choisir Région ...</option>
+      <option value="{{ item }}" *ngFor="let item of listeRegion">{{ item }}</option>
+    </select>
+    <select class="form-control form-control-sm col-5" (change)="selectDepartement($event)">
+      <option value="null">Choisir Département ...</option>
+      <option value="{{ item }}" *ngFor="let item of listeDepartment">{{ item }}</option>
+    </select>
+  </form>
+</div>
+<hr>
+<div class="row" style="background-color: #f4f4f4">
   <div class="col-sm-12">
     <div class="row">
-      <div class="col-sm-8">
+      <div class="col-sm-7">
           <div id="chartdivLine" [style.width.%]="100" [style.height.px]="350"></div>
       </div>
       <div class="col-sm-3">
           <div id="chartdivMap" [style.width.%]="100" [style.height.px]="350"></div>
       </div>
-      <div class="col-sm-1" id="infos">
-        {{ stat }}
+      <div class="col-sm-2 card" id="infos" style="overflow: hidden;background-color: white">
+        <div class="card-header">
+            <h4 id="nomRegion"></h4>
+        </div>
+        <div class="card-body">
+          <div id="avg"></div>
+          <hr>
+          <div id="max"></div>
+          <hr>
+          <div id="min"></div>
+          <hr>
+          <div id="sum"></div>
+        </div>
+        <div class="card-footer text-muted">
+            <b>M en millions</b>
+        </div>
       </div>
     </div>
   </div>
 </div>
 <hr>
-<div class="row">
+<div class="row" style="background-color: #f4f4f4">
   <div class="col-sm-12">
       <div class="row">
         <div class="col-sm-2">
@@ -33,7 +60,7 @@
   </div>
 </div>
 <hr>
-<div class="row">
+<div class="row" style="background-color: #f4f4f4">
   <div class="col-sm-4">
     <div class="table-responsive">
       <div><h5><b>Liste des 10 Département les plus douteux</b></h5></div>

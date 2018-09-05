@@ -36,10 +36,16 @@ export class DashboardGlobalComponent implements OnInit {
     this.generateGraphLine('donneesgeo', 'KWH', 'Consommation Energie', 'Date', 'Consommation dénergie');
     this.generateGraphMap('CodeCountry', 'Risk', 'Répartition spatiale du chiffre daffaire', 'DOMAIN');
     this.genereGraphPie('chartdivPie1', 'Suspectés de fraude');
-    this.genereGraphPieRegionAndDepartment('chartdivPie2', '% des Top 3 régions susppectés de fraude', 'DOMAIN', 'Class');
-    this.genereGraphPieRegionAndDepartment('chartdivPie3', 'Suspectés de fraude', 'Department', 'Class');
+    this.genereGraphPieRegionAndDepartment('chartdivPie2', '% des Top 3 régions suspectés de fraude', 'DOMAIN', 'Class');
+    this.genereGraphPieRegionAndDepartment('chartdivPie3', '% des Top 3 département suspectés de fraude', 'Department', 'Class');
     this.generateTableDepartment(3, 'Department', 'Risk', 'avg');
     this.generateTableClient(3, 'Department', 'Risk', 'desc');
+  }
+  selectRegion(e) {
+    alert(e.target.value);
+  }
+  selectDepartement(e) {
+
   }
   genereGraphPieRegionAndDepartment(id, title, columnX, columnY) {
     const querr = bodybuilder()
@@ -86,8 +92,7 @@ export class DashboardGlobalComponent implements OnInit {
             }
         );
     }
-  generateTableClient(numberOfHits, columnText, columnValue, sort) {
-    // if (this.nomDepartmentSelected === 'null') {
+    generateTableClient(numberOfHits, columnText, columnValue, sort) {
         const qu = bodybuilder()
             .sort(columnValue, sort)
             .size(numberOfHits)
@@ -98,21 +103,9 @@ export class DashboardGlobalComponent implements OnInit {
                 this.listeTopHitValueClient.push(element['_source']);
             });
         });
-    /* } else {
-        const q = bodybuilder().query('match_phrase', columnText, this.nomDepartmentSelected)
-            .size(numberOfHits)
-            .sort(columnValue, sort)
-            .build();
-
-        this.es.getDataWithRequeteAggregation('donneesgeo', q).subscribe(ele => {
-            ele['hits']['hits'].forEach((element) => {
-                this.listeTopHitValueClient.push(element['_source']);
-            });
-        });
-    } */
-}
-  generateTableDepartment(numberOfHits, columnText, columnValue, typeAggregation) {
-    const q = bodybuilder()
+    }
+    generateTableDepartment(numberOfHits, columnText, columnValue, typeAggregation) {
+        const q = bodybuilder()
         .aggregation('terms', columnText + '.keyword', {
             size: 1000
             }, agg => agg.aggregation(typeAggregation, columnValue)).build();
@@ -135,9 +128,8 @@ export class DashboardGlobalComponent implements OnInit {
             this.listeTopHitValueDepartment = this.listeTopHitValueDepartment.splice(
                 0, numberOfHits
             );
-        }
-    );
-}
+        });
+    }
   generateGraphLine(index, consommationColumn, titreAxeOrdonnée, typeDate, title) {
     let chartData = [];
     this.es.getAllData(index, 50).subscribe(
@@ -199,26 +191,6 @@ export class DashboardGlobalComponent implements OnInit {
         }
     );
   }
-  /* getInfos(codeCountry, champInfos, fieldNameMap): any {
-    const q = bodybuilder()
-        .aggregation('terms', 'DOMAIN.keyword',
-        agg => agg.aggregation('stats', 'Sales')).build();
-        this.es.getDataWithRequeteAggregation('donneesgeo', q).subscribe(
-            stat => {
-                this.es.getResultFilterAggregationBucket(stat).every(async vall => {
-                    const nameAggregation = await Object.keys(vall)[0];
-                    if (codeCountry === vall['key']) {
-                        alert(vall['key']);
-                        // console.log(vall[nameAggregation]);
-                        this.infos.push({
-                            'infos': vall[nameAggregation]
-                        });
-                        return false;
-                    }
-                });
-            }
-        );
-  } */
     getInfos(value) {
         // let inf = [];
         const r = bodybuilder()
@@ -231,16 +203,16 @@ export class DashboardGlobalComponent implements OnInit {
         await this.es.getAllData('donneesgeo', 50).subscribe(
             el => {
                 let data = el;
-                let liste = ['Dakar', 'Louga', 'Kolda', 'Matam'];
                 data['hits']['hits'].forEach((element, i) => {
-                    this.getInfos('Dakar').subscribe(vall => {
+                    this.getInfos(element['_source']['DOMAIN']).subscribe(vall => {
                         this.chartDataMap.push({
                             'id': element['_source'][codeCountry],
                             'value': element['_source'][fieldNameMap],
-                            'infos': JSON.stringify(this.es.getResultFilterAggregationBucket(vall))
+                            'infos': this.es.getResultFilterAggregationBucket(vall)
                         });
                     });
                 });
+                console.log(this.chartDataMap);
                 this.AmCharts.makeChart('chartdivMap', {
                     'type': 'map',
                     'theme': 'light',
@@ -258,9 +230,10 @@ export class DashboardGlobalComponent implements OnInit {
                         'selectable': true
                     },
                     'valueLegend': {
-                        'right': 10,
+                        'left': 1,
                         'minValue': '0',
-                        'maxValue': 'N'
+                        'maxValue': 'N',
+                        'width': 100
                     },
                     'export': {
                         'enabled': false
@@ -268,7 +241,11 @@ export class DashboardGlobalComponent implements OnInit {
                     'listeners': [{
                         'event': 'clickMapObject',
                         'method': function(event) {
-                            document.getElementById('infos').innerHTML = event.mapObject.title + ' - ' + event.mapObject.infos;
+                        document.getElementById('nomRegion').innerHTML = event.mapObject.title;
+                        document.getElementById('avg').innerHTML = 'Moyenne : ' + (event.mapObject.infos.avg / 1000000).toFixed(2) + 'M';
+                        document.getElementById('sum').innerHTML = 'Somme : ' + (event.mapObject.infos.sum  / 1000000).toFixed(2) + 'M';
+                        document.getElementById('min').innerHTML = 'Minimum : ' + (event.mapObject.infos.min  / 1000000).toFixed(2) + 'M';
+                        document.getElementById('max').innerHTML = 'Maximum : ' + (event.mapObject.infos.max  / 1000000).toFixed(2) + 'M';
                         }
                     }]
                 });
